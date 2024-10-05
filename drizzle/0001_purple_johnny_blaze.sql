@@ -1,0 +1,1 @@
+ALTER TABLE `stations` ADD `lastPrice` real NOT NULL;

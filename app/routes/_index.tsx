@@ -3,6 +3,7 @@ import { Input } from "~/components/ui/input";
 import { Button } from "~/components/ui/button";
 import { MagnifyingGlassIcon, PlusIcon } from "@radix-ui/react-icons";
 import {
+  ColumnDef,
   createColumnHelper,
   flexRender,
   getCoreRowModel,
@@ -17,6 +18,8 @@ import {
   TableRow,
 } from "~/components/ui/table";
 import { Link, useLoaderData } from "@remix-run/react";
+import { db } from "drizzle/db";
+import { stations } from "drizzle/schema";
 
 export const meta: MetaFunction = () => {
   return [
@@ -25,14 +28,14 @@ export const meta: MetaFunction = () => {
   ];
 };
 
-type GasStationPrice = {
-  id: string;
+type TableRow = {
+  id: number;
   name: string;
   price: number;
   location: string;
   updatedAt: string;
 };
-const columnHelper = createColumnHelper<GasStationPrice>();
+const columnHelper = createColumnHelper<TableRow>();
 const columns = [
   columnHelper.accessor("name", {
     header: () => "Estación",
@@ -67,27 +70,21 @@ const columns = [
 ];
 
 export async function loader() {
-  const data: GasStationPrice[] = [
-    {
-      id: "1",
-      name: "Pemex",
-      location: "Av. Revolución 123",
-      price: 20.5,
-      updatedAt: new Date().toISOString(),
-    },
-    {
-      id: "2",
-      name: "Shell",
-      location: "Calle 5 de Mayo 456",
-      price: 21.2,
-      updatedAt: new Date(2024, 8, 30).toISOString(),
-    },
-  ];
+  const data = await db
+    .select({
+      id: stations.id,
+      name: stations.name,
+      price: stations.lastPrice,
+      location: stations.location,
+      updatedAt: stations.updatedAt,
+    })
+    .from(stations);
+  console.log(data);
   return data;
 }
 
 export default function Index() {
-  const data = useLoaderData<typeof loader>() satisfies GasStationPrice[];
+  const data = useLoaderData<typeof loader>();
   const table = useReactTable({
     data,
     columns,
